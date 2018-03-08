@@ -1,0 +1,36 @@
+---
+
+- name: apt install
+  apt: name={{ item }} state=present update_cache=yes
+  with_items:
+      - systemd-container
+      - bridge-utils
+      - debootstrap
+
+- name: copy systemd-networkd files
+  copy: src={{ item }} dest=/etc/systemd/network/{{ item }} mode=0644
+  with_items:
+      - br0.network
+      - br0.netdev
+      - eth0.network
+
+- name: enable & started systemd-networkd
+  systemd:
+      name: systemd-networkd.service
+      enabled: yes
+      state: started
+
+- name: copy iptables file
+  copy: src=iptables_rule.sh dest=/etc/network/if-pre-up.d/iptables_rule.sh mode=0755
+
+- name: configure iptables
+  command: /etc/network/if-pre-up.d/iptables_rule.sh
+
+- name: copy sysctl file
+  copy: src=sysctl.conf dest=/etc/sysctl.conf mode=0644
+
+- name: configure sysctl
+  command: sysctl -p
+
+- name: copy systemd-nspawn@.servece file
+  copy: src=systemd-nspawn@.service dest=/etc/systemd/system/systemd-nspawn@.service
