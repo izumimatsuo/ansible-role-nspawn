@@ -22,15 +22,19 @@
 
 - name: copy iptables file
   copy: src=iptables_rule.sh dest=/etc/network/if-pre-up.d/iptables_rule.sh mode=0755
+  register: result
 
 - name: configure iptables
   command: /etc/network/if-pre-up.d/iptables_rule.sh
+  when: result.changed
 
 - name: copy sysctl file
   copy: src=sysctl.conf dest=/etc/sysctl.conf mode=0644
+  register: result
 
 - name: configure sysctl
   command: sysctl -p
+  when: result.changed
 
 - name: copy systemd-nspawn@.servece file
   copy: src=systemd-nspawn@.service dest=/etc/systemd/system/systemd-nspawn@.service
