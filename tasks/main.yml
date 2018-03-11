@@ -1,6 +1,6 @@
 ---
 
-- name: apt install
+- name: package install
   apt: name={{ item }} state=present update_cache=yes
   with_items:
       - systemd-container
@@ -12,9 +12,8 @@
   with_items:
       - br0.network
       - br0.netdev
-      - eth0.network
 
-- name: enable & started systemd-networkd
+- name: start systemd-networkd
   systemd:
       name: systemd-networkd.service
       enabled: yes
@@ -38,3 +37,14 @@
 
 - name: copy systemd-nspawn@.servece file
   copy: src=systemd-nspawn@.service dest=/etc/systemd/system/systemd-nspawn@.service
+
+- name: make containers directory
+  file: path=/root/containers state=directory owner=root group=root mode=0755
+  register: result
+
+- name: execute debootstrap
+  command: debootstrap --arch amd64 xenial ./master http://archive.ubuntu.com/ubuntu
+  when: result.changed
+
+  # - name: setup systemd-machined
+  #  file: src=/usr/lib/systemd/system/machines.target dest=/etc/systemd/system/multi-user.target.wants/machines.target state=link
